@@ -1,0 +1,66 @@
+name: Build and release
+
+# Push a tag like v1.0.0 to trigger a build for every supported architecture
+# and publish the results straight to a GitHub Release.
+on:
+  push:
+    tags:
+      - "v*.*.*"
+  workflow_dispatch: # allows a manual run from the Actions tab for testing
+
+permissions:
+  contents: write # needed to create the release and upload assets
+
+jobs:
+  build:
+    runs-on: windows-latest # WPF (UseWPF) only builds on Windows
+    strategy:
+      matrix:
+        rid: [win-x64, win-x86, win-arm64]
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: "8.0.x"
+
+      - name: Publish AulaControl (GUI) for ${{ matrix.rid }}
+        run: >
+          dotnet publish app/AulaControl.csproj -c Release -r ${{ matrix.rid }}
+          --self-contained true
+          -p:PublishSingleFile=true
+          -p:IncludeNativeLibrariesForSelfExtract=true
+          -o publish/AulaControl-${{ matrix.rid }}
+
+      - name: Publish AulaCli (test tool) for ${{ matrix.rid }}
+        run: >
+          dotnet publish cli/AulaCli.csproj -c Release -r ${{ matrix.rid }}
+          --self-contained true
+          -p:PublishSingleFile=true
+          -p:IncludeNativeLibrariesForSelfExtract=true
+          -o publish/AulaCli-${{ matrix.rid }}
+
+      - name: Zip artifacts
+        run: |
+          Compress-Archive -Path publish/AulaControl-${{ matrix.rid }}/* -DestinationPath AulaControl-${{ matrix.rid }}.zip
+          Compress-Archive -Path publish/AulaCli-${{ matrix.rid }}/* -DestinationPath AulaCli-${{ matrix.rid }}.zip
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: build-${{ matrix.rid }}
+          path: "*.zip"
+
+  release:
+    needs: build
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/download-artifact@v4
+        with:
+          path: artifacts
+          merge-multiple: true
+
+      - name: Create GitHub Release
+        uses: softprops/action-gh-release@v2
+        with:
+          files: artifacts/*.zip
+          generate_release_notes: true

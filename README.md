@@ -60,6 +60,20 @@ dotnet publish -c Release -r win-x64 --self-contained false
 
 The output lands in `app/bin/Release/net8.0-windows/win-x64/publish/`.
 
+### Prebuilt releases
+
+Don't want to build it yourself? Push a version tag and CI does it for you:
+
+```bash
+git tag v1.0.0
+git push origin v1.0.0
+```
+
+[`.github/workflows/release.yml`](.github/workflows/release.yml) builds self-contained,
+single-file `.exe`s for win-x64, win-x86, and win-arm64 (both the app and the CLI tool), zips
+each one, and publishes them to a new [GitHub Release](https://github.com/sgtflixy/AulaControl/releases)
+automatically. No .NET install needed on the download side.
+
 ## Repository layout
 
 ```
