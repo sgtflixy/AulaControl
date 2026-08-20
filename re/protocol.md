@@ -171,13 +171,13 @@ copy(JSON.stringify(curDevice.keys, null, 1))
 ```
 Each key has an `index` field. **The bitmask (col, rowBit) address for
 `SetKeyActuationBitmask` is simply `row = index/22` (integer division),
-`col = index%22`** — found by reading the minified source directly
+`col = index%22`**, found by reading the minified source directly
 (`agreement.min.js`, function `openTriggerTest`, does exactly this divmod
 when building the same 22-byte bitmask we reverse-engineered by hand).
 This formula was cross-verified against every value we'd already confirmed by
-hardware capture (Esc, 1, 6, Back, P, Enter, Z, RShift, LCtrl, Space) — 100%
-match — then used to fill in the entire rest of the board, including catching
-that our earlier LWin/LAlt *guess* (col 2/4, interpolated) was wrong — real
+hardware capture (Esc, 1, 6, Back, P, Enter, Z, RShift, LCtrl, Space): 100%
+match. Then it filled in the entire rest of the board, including catching
+that our earlier LWin/LAlt *guess* (col 2/4, interpolated) was wrong: real
 values are col 1/2.
 
 The full table lives in `re/external/hed-mirror/keys_win60he.json` and
@@ -212,8 +212,8 @@ not yet decoded/needed — see Open questions.
 
 **Repos that got us here**: HenryMDB/win60heupdate, HenryMDB/win60he,
 caioalonso/win-68-he-tool, veysiemrah/aula-rgb-controller (user-supplied)
-turned out to target different hardware (see "Investigated dead ends" below)
-— but the *idea* of mirroring the site and reading its JS directly is what
+turned out to target different hardware (see "Investigated dead ends" below).
+But the *idea* of mirroring the site and reading its JS directly is what
 cracked this. Should have done this from the start.
 
 ## Lighting effects — all 16 confirmed (2026-08-20)
