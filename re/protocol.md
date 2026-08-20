@@ -304,6 +304,28 @@ against real hardware: single-key write and a multi-key write spanning
 several chunks (Esc/G/Space, deliberately chosen to land in different
 chunks) both acked and painted the correct keys.
 
+## Reading back per-key Custom colors — DECODED (2026-08-20)
+
+An earlier note in this file (and in `AulaProtocol.SetCustomKeyColors`'s doc comment) claimed
+there was no read-back for per-key colors. Wrong — missed on the first pass, found this time by
+grepping the source for `initCustomLightValue`, which does exactly this. Same shape as every
+other read command here: query once, the device pushes multiple response packets from one call.
+
+```
+TX: 09 80        (slot 0)   or   09 81   (slot 1)
+RX ×8 (chunks 0-7): 09 [80|81] [chunkHi][chunkLo] [len] <len/3 RGB triplets>
+    keyIndex = 18*chunk + triplet position
+```
+
+18 keys/chunk matches `SetCustomKeyColors`'s own chunking (54-byte chunks / 3 bytes-per-key).
+Verified end to end: wrote Esc/G/Space to red/green/blue, read back 132 total entries with
+those three at the exact right index and color. Keys that were never painted read back as
+`(0,0,0)`, which the app treats as "off," not literal black.
+
+Implemented as `AulaProtocol.ReadCustomKeyColors()`, wired into the same Connect/Refresh flow
+as the global lighting read, so painted keys survive a reconnect instead of only existing in
+the app's in-memory state.
+
 ## SOCD — DECODED (2026-08-20), corrects the earlier wrong dead-end below
 
 **Earlier conclusion in this file was wrong.** The `0x24` traffic seen during

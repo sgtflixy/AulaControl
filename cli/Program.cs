@@ -35,6 +35,18 @@ if (args.Length > 0 && args[0] == "lighting-roundtrip")
         $"read back: mode={state.Mode} brightness={state.Brightness} speed={state.Speed} fg=({state.FgR},{state.FgG},{state.FgB})");
 }
 
+if (args.Length > 0 && args[0] == "customlight-roundtrip")
+{
+    Console.WriteLine("Setting Custom mode, then Esc(22)=red, G(72)=green, Space(116)=blue...");
+    proto.SetGlobalLighting(AulaProtocol.LightMode.Custom, 4, 4, 0, 0, 0);
+    var colors = new Dictionary<int, (byte, byte, byte)> { [22] = (255, 0, 0), [72] = (0, 255, 0), [116] = (0, 0, 255) };
+    proto.SetCustomKeyColors(colors);
+    var readBack = proto.ReadCustomKeyColors();
+    Console.WriteLine($"Read back {readBack.Count} entries.");
+    foreach (var idx in new[] { 22, 72, 116 })
+        Console.WriteLine(readBack.TryGetValue(idx, out var c) ? $"  index={idx}: ({c.Item1},{c.Item2},{c.Item3})" : $"  index={idx}: MISSING");
+}
+
 if (args.Length > 0 && args[0] == "lighting-read")
 {
     var state = proto.ReadGlobalLighting();

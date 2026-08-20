@@ -371,6 +371,34 @@ public partial class MainWindow : Window
 
         _r = state.FgR; _g = state.FgG; _b = state.FgB;
         SyncColorUi();
+
+        LoadCustomKeyColorsFromKeyboard(p);
+    }
+
+    /// <summary>
+    /// Pulls whatever per-key Custom-mode colors are already stored on the
+    /// keyboard into `_keyColors` and repaints the Individual Key Colors
+    /// visual, so painted keys survive a reconnect instead of only living in
+    /// this app's in-memory state. (0,0,0) reads back as "never painted",
+    /// not literal black. Uses AulaProtocol.ReadCustomKeyColors.
+    /// </summary>
+    private void LoadCustomKeyColorsFromKeyboard(AulaProtocol p)
+    {
+        var raw = p.ReadCustomKeyColors();
+        _keyColors.Clear();
+        foreach (var key in KeyboardLayout.Win60Rows.SelectMany(r => r).Where(k => k.Index.HasValue))
+        {
+            if (!raw.TryGetValue(key.Index!.Value, out var c)) continue;
+            if (c is (0, 0, 0)) continue;
+            _keyColors[key] = c;
+        }
+
+        foreach (var (key, visual) in _lightingKeyVisuals)
+        {
+            visual.Background = _keyColors.TryGetValue(key, out var c)
+                ? new SolidColorBrush(Color.FromRgb(c.r, c.g, c.b))
+                : (Brush)FindResource("KeycapBg");
+        }
     }
 
     private void RefreshLighting_Click(object sender, RoutedEventArgs e)

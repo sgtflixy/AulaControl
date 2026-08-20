@@ -189,10 +189,12 @@ namespace AulaControl.Protocol
         /// chunks total for ~132 key slots; the last chunk is 18 bytes).
         ///
         /// IMPORTANT: this sends the FULL buffer each call — there is no
-        /// known per-key-only update or read-back, so any key not present in
+        /// per-key-only update, so any key not present in
         /// <paramref name="keyColors"/> goes to (0,0,0) (off) for this call.
         /// Callers should pass every key they want lit, every time (the app
         /// keeps a local dictionary of "current" per-key colors for this).
+        /// See <see cref="ReadCustomKeyColors"/> for the read-back counterpart
+        /// (an earlier version of this doc wrongly said no read existed).
         /// </summary>
         public bool SetCustomKeyColors(IReadOnlyDictionary<int, (byte r, byte g, byte b)> keyColors, byte slot = 0)
         {
@@ -228,6 +230,53 @@ namespace AulaControl.Protocol
                 if (resp == null) allOk = false;
             }
             return allOk;
+        }
+
+        /// <summary>
+        /// Reads back the per-key Custom-mode colors currently stored on the
+        /// keyboard. Recovered from the site's own initCustomLightValue():
+        /// query `09 80` (slot 0) or `09 81` (slot 1), then — same FIFO-pop
+        /// quirk as the 0x0d device-info and 0x24 SOCD reads — the device
+        /// pushes 8 response packets (chunk indices 0-7) from that one query.
+        /// Each response: [09][80 or 81][chunkHi][chunkLo][len]
+        /// &lt;len/3 RGB triplets&gt;, where key index = 18*chunk + triplet
+        /// position (18 = 54-byte chunk / 3 bytes-per-key, matching the
+        /// chunking in SetCustomKeyColors). Keys never painted come back as
+        /// (0,0,0) — callers should treat that as "off", not a real color.
+        /// </summary>
+        public Dictionary<int, (byte r, byte g, byte b)> ReadCustomKeyColors(byte slot = 0)
+        {
+            var result = new Dictionary<int, (byte, byte, byte)>();
+            var payload = new byte[63];
+            payload[0] = 0x09;
+            payload[1] = (byte)(slot == 0 ? 0x80 : 0x81);
+
+            var first = _dev.SendRaw(payload);
+            if (first == null) return result;
+            ParseCustomLightChunk(first, result);
+
+            for (int i = 0; i < 7; i++)
+            {
+                var next = _dev.ReadNext();
+                if (next == null) break;
+                ParseCustomLightChunk(next, result);
+            }
+            return result;
+        }
+
+        private static void ParseCustomLightChunk(byte[] resp, Dictionary<int, (byte, byte, byte)> into)
+        {
+            if (resp.Length < 5 || resp[0] != 0x09) return;
+            int chunk = (resp[2] << 8) | resp[3];
+            int len = resp[4];
+            if (resp.Length < 5 + len) return;
+
+            int count = len / 3;
+            for (int i = 0; i < count; i++)
+            {
+                int off = 5 + 3 * i;
+                into[18 * chunk + i] = (resp[off], resp[off + 1], resp[off + 2]);
+            }
         }
 
         // ---- cmd 0x24: SOCD ("Prcs" internally — confirmed via language.json:
