@@ -25,6 +25,25 @@ else
     Console.WriteLine($"Build date: {info.BuildDate}");
 }
 
+if (args.Length > 0 && args[0] == "lighting-roundtrip")
+{
+    // distinct speed vs brightness to confirm the read response's field order
+    Console.WriteLine("Writing Breath, speed=1, brightness=3, color=(10,20,30)...");
+    proto.SetGlobalLighting(AulaProtocol.LightMode.Breath, speed0to4: 1, brightness0to4: 3, 10, 20, 30);
+    var state = proto.ReadGlobalLighting();
+    Console.WriteLine(state == null ? "No response." :
+        $"read back: mode={state.Mode} brightness={state.Brightness} speed={state.Speed} fg=({state.FgR},{state.FgG},{state.FgB})");
+}
+
+if (args.Length > 0 && args[0] == "lighting-read")
+{
+    var state = proto.ReadGlobalLighting();
+    if (state == null) Console.WriteLine("No response.");
+    else Console.WriteLine($"mode={state.Mode} brightness={state.Brightness} speed={state.Speed} " +
+        $"fg=({state.FgR},{state.FgG},{state.FgB}) bg=({state.BgR},{state.BgG},{state.BgB}) " +
+        $"direction={state.Direction} fullColor={state.FullColor}");
+}
+
 if (args.Length > 0 && args[0] == "socd-read")
 {
     var enabled = proto.ReadSocdEnabled();

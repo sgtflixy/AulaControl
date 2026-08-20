@@ -125,6 +125,54 @@ namespace AulaControl.Protocol
         public bool SetGlobalStaticColor(byte brightness0to4, byte r, byte g, byte b) =>
             SetGlobalLighting(LightMode.Static, speed0to4: 4, brightness0to4, r, g, b);
 
+        public sealed class GlobalLightingState
+        {
+            public LightMode Mode;
+            public byte Brightness;
+            public byte Speed;
+            public byte FgR, FgG, FgB;
+            public byte BgR, BgG, BgB;
+            public byte Direction;
+            public byte FullColor;
+        }
+
+        /// <summary>
+        /// Reads the keyboard's currently active lighting state. Recovered
+        /// from the site's own initLightValue()/initSideLightValue() (query
+        /// `07 01` for main / `08 01` for side). The response field order
+        /// matches the write frame's [mode][speed][brightness] — confirmed
+        /// with a write-then-read round trip using distinct speed/brightness
+        /// values on real hardware, since an initial attempt at reading this
+        /// straight from the minified source's property-name deobfuscation
+        /// (0x1687 string table) had speed and brightness swapped.
+        /// Frame: `07 01` (zero-padded to 63 bytes) → response
+        /// `07 .. .. .. [len] [mode][speed][brightness][fgR][fgG][fgB]
+        /// [bgR][bgG][bgB][direction][fullColor][power]`.
+        /// </summary>
+        public GlobalLightingState? ReadGlobalLighting(bool sideLight = false)
+        {
+            var payload = new byte[63];
+            payload[0] = (byte)(sideLight ? 0x08 : 0x07);
+            payload[1] = 0x01;
+            var resp = _dev.SendRaw(payload);
+            if (resp == null) return null;
+
+            int len = resp[4];
+            const int off = 5;
+            if (len < 12 || resp.Length < off + 12) return null;
+
+            return new GlobalLightingState
+            {
+                Mode = (LightMode)resp[off + 0],
+                Speed = resp[off + 1],
+                Brightness = resp[off + 2],
+                FgR = resp[off + 3], FgG = resp[off + 4], FgB = resp[off + 5],
+                BgR = resp[off + 6], BgG = resp[off + 7], BgB = resp[off + 8],
+                Direction = resp[off + 9],
+                FullColor = resp[off + 10],
+            };
+        }
+
         // ---- cmd 0x09: per-key custom RGB (Lighting > Custom mode) -----------
 
         /// <summary>

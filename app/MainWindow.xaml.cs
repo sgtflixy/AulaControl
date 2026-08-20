@@ -93,6 +93,7 @@ public partial class MainWindow : Window
         PathText.Text = $"HID path: {_device.DevicePath}";
         SetConnectionState(connected: true, "Connected");
 
+        LoadLightingFromKeyboard(_protocol);
         LoadSocdFromKeyboard(_protocol);
         await ReadAllKeyTravelsAsync();
     }
@@ -347,6 +348,37 @@ public partial class MainWindow : Window
             byte fullColor = (byte)(RainbowCheck.IsChecked == true ? 1 : 0);
             bool ok = p.SetGlobalLighting(mode, speed, brightness, _r, _g, _b, fullColor: fullColor);
             ShowToast(ok ? $"{mode} applied." : $"{mode} sent, but no ack from the keyboard — check it changed.", isError: !ok);
+        });
+    }
+
+    /// <summary>
+    /// Pulls the keyboard's currently active lighting effect/speed/brightness/
+    /// color and reflects it in the UI, so connecting doesn't silently reset
+    /// what's shown to Static red. Uses AulaProtocol.ReadGlobalLighting (see
+    /// re/protocol.md).
+    /// </summary>
+    private void LoadLightingFromKeyboard(AulaProtocol p)
+    {
+        var state = p.ReadGlobalLighting();
+        if (state == null) return;
+
+        if (Enum.IsDefined(typeof(AulaProtocol.LightMode), state.Mode))
+            EffectCombo.SelectedItem = state.Mode;
+
+        BrightnessSlider.Value = state.Brightness;
+        SpeedSlider.Value = state.Speed;
+        RainbowCheck.IsChecked = state.FullColor == 1;
+
+        _r = state.FgR; _g = state.FgG; _b = state.FgB;
+        SyncColorUi();
+    }
+
+    private void RefreshLighting_Click(object sender, RoutedEventArgs e)
+    {
+        RequireProtocol(p =>
+        {
+            LoadLightingFromKeyboard(p);
+            ShowToast("Lighting refreshed from keyboard.");
         });
     }
 

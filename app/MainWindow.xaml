@@ -83,7 +83,14 @@
 
             <!-- Lighting page -->
             <StackPanel x:Name="PageLighting" Visibility="Collapsed">
-                <TextBlock Text="Lighting" FontSize="22" FontWeight="Bold" Margin="0,0,0,18"/>
+                <Grid Margin="0,0,0,18">
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="*"/>
+                        <ColumnDefinition Width="Auto"/>
+                    </Grid.ColumnDefinitions>
+                    <TextBlock Grid.Column="0" Text="Lighting" FontSize="22" FontWeight="Bold" VerticalAlignment="Center"/>
+                    <Button Grid.Column="1" Content="Refresh from Keyboard" Click="RefreshLighting_Click" Style="{StaticResource SecondaryButton}"/>
+                </Grid>
 
                 <Border Style="{StaticResource Card}">
                     <StackPanel>

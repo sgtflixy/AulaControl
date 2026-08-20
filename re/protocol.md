@@ -247,6 +247,33 @@ Note: this command sometimes doesn't return an ack within our read window even
 though the write visibly succeeds (confirmed by eye on real hardware) — don't
 treat a null response from this specific command as a hard failure.
 
+## Reading back the active lighting state — DECODED (2026-08-20)
+
+Connecting previously always showed Static/red in the app regardless of what the keyboard was
+actually doing, because nothing read the live state back. Recovered from the site's own
+`initLightValue()`/`initSideLightValue()`: query `07 01` for main lighting, `08 01` for side
+lighting (63-byte zero-padded payload, same as every other command here).
+
+```
+TX: 07 01 (zero-padded)
+RX: 07 .. .. .. [len] [mode][speed][brightness][fgR][fgG][fgB][bgR][bgG][bgB][direction][fullColor][power]
+```
+
+**Correction while implementing this**: my first pass at decoding the response, based on the
+deobfuscated property-name assignment order in the minified source, had `speed` and
+`brightness` swapped (read as `[mode][brightness][speed]`). A write-then-read round trip on
+real hardware with deliberately distinct values (wrote speed=1, brightness=3) came back
+speed=3, brightness=1 under that layout, proving it wrong immediately. The response's field
+order actually matches the write frame's `[mode][speed][brightness]` exactly. Fixed in
+`AulaProtocol.ReadGlobalLighting` before it ever shipped. Lesson: for anything where a
+round-trip test is possible, run it, don't trust the deobfuscated variable names alone — the
+string table can decode a property name to the wrong constant.
+
+Implemented as `AulaProtocol.ReadGlobalLighting()`, wired into the app's Connect flow (and a
+manual "Refresh from Keyboard" button on the Lighting page) so the UI reflects whatever effect,
+speed, brightness, and color is actually active on the keyboard instead of resetting the view
+to defaults on every connect.
+
 ## Per-key custom lighting (mode 10) — DECODED (2026-08-20)
 
 Resolved by reading `setCustomLight()` directly in `agreement.min.js` instead
