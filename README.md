@@ -87,6 +87,8 @@ Not affiliated with or endorsed by AULA. Built independently by reverse-engineer
 public web driver, for personal and community use. Use at your own risk: writing raw HID
 commands to your keyboard's firmware always carries some risk, however small.
 
+This project was majorly made with ai, with only keyboard / hardware data being manually fed. If you have any issues either fix them yourself or create an issue in the repo.
+
 ## License
 
 Apache License 2.0. See [LICENSE](LICENSE).
