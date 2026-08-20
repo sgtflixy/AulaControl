@@ -29,7 +29,7 @@ real hardware. The full write-up is in [`re/protocol.md`](re/protocol.md).
 
 | Lighting | Actuation |
 |---|---|
-| _screenshot here_ | _screenshot here_ |
+| https://github.com/sgtflixy/AulaControl/blob/main/repo-assets/AulaControl_M5znYjhl4b.png?raw=true | https://github.com/sgtflixy/AulaControl/blob/main/repo-assets/AulaControl_EHfN9s06Bt.png?raw=true |
 
 | SOCD | Individual Key Colors |
 |---|---|
