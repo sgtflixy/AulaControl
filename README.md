@@ -24,16 +24,13 @@ real hardware. The full write-up is in [`re/protocol.md`](re/protocol.md).
 
 ## Screenshots
 
-<!-- Drop screenshots in a `docs/` or `screenshots/` folder and swap these placeholders,
-     e.g. ![Lighting page](docs/lighting.png) -->
-
 | Lighting | Actuation |
 |---|---|
-| _screenshot here_ | _screenshot here_ |
+| ![Lighting](repo-assets/AulaControl_M5znYjhl4b.png?raw=true) | ![Actuation](repo-assets/AulaControl_EHfN9s06Bt.png?raw=true) |
 
 | SOCD | Individual Key Colors |
 |---|---|
-| _screenshot here_ | _screenshot here_ |
+| ![SOCD](repo-assets/AulaControl_drcbrQ2sYX.png?raw=true) | ![Individual Key Colors](repo-assets/AulaControl_LmNsqO7zyp.png?raw=true) |
 
 ## Supported hardware
 
