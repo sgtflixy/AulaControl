@@ -1,0 +1,404 @@
+<Window x:Class="AulaControl.MainWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        xmlns:local="clr-namespace:AulaControl"
+        mc:Ignorable="d"
+        Title="AULA Control" Height="680" Width="980"
+        MinHeight="520" MinWidth="760"
+        Background="{StaticResource BgWindow}"
+        FontFamily="Segoe UI"
+        TextOptions.TextFormattingMode="Display"
+        UseLayoutRounding="True">
+    <Grid>
+        <Grid.ColumnDefinitions>
+            <ColumnDefinition Width="190"/>
+            <ColumnDefinition Width="*"/>
+        </Grid.ColumnDefinitions>
+
+        <!-- Sidebar -->
+        <Border Grid.Column="0" Background="{StaticResource BgSidebar}">
+            <DockPanel LastChildFill="False">
+                <StackPanel DockPanel.Dock="Top" Margin="18,22,18,26">
+                    <TextBlock Text="AULA CONTROL" FontSize="16" FontWeight="Bold"/>
+                    <TextBlock x:Name="DeviceNameText" Text="No device" FontSize="11" Foreground="{StaticResource TextSecondary}" Margin="0,3,0,0"/>
+                </StackPanel>
+
+                <StackPanel DockPanel.Dock="Top">
+                    <RadioButton x:Name="NavDevice" Style="{StaticResource NavButton}" Content="Device" IsChecked="True" Checked="Nav_Checked"/>
+                    <RadioButton x:Name="NavLighting" Style="{StaticResource NavButton}" Content="Lighting" Checked="Nav_Checked"/>
+                    <RadioButton x:Name="NavActuation" Style="{StaticResource NavButton}" Content="Actuation" Checked="Nav_Checked"/>
+                    <RadioButton x:Name="NavSocd" Style="{StaticResource NavButton}" Content="SOCD" Checked="Nav_Checked"/>
+                    <RadioButton x:Name="NavConsole" Style="{StaticResource NavButton}" Content="Raw Console" Checked="Nav_Checked"/>
+                </StackPanel>
+
+                <StackPanel DockPanel.Dock="Bottom" Margin="18">
+                    <StackPanel Orientation="Horizontal" Margin="0,0,0,8" VerticalAlignment="Center">
+                        <Ellipse x:Name="StatusDot" Width="8" Height="8" Fill="#555" VerticalAlignment="Center" Margin="0,0,7,0"/>
+                        <TextBlock x:Name="ConnectionText" Text="Disconnected" FontSize="12" FontWeight="SemiBold" Foreground="{StaticResource TextSecondary}" VerticalAlignment="Center"/>
+                    </StackPanel>
+                    <Button x:Name="ConnectButton" Content="Connect" Click="ConnectButton_Click" HorizontalAlignment="Stretch" Height="32"/>
+                </StackPanel>
+            </DockPanel>
+        </Border>
+
+        <!-- Content -->
+        <Grid Grid.Column="1" Margin="28,26,28,20">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="*"/>
+        </Grid.RowDefinitions>
+
+        <Border x:Name="ActionToast" Grid.Row="0" Background="{StaticResource BgCardAlt}" BorderBrush="{StaticResource BorderSubtle}" BorderThickness="1" CornerRadius="8" Padding="12,8" Margin="0,0,0,14" Visibility="Collapsed">
+            <TextBlock x:Name="ActionToastText" FontSize="12" TextWrapping="Wrap"/>
+        </Border>
+
+        <ScrollViewer Grid.Row="1" VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled">
+        <Grid>
+
+            <!-- Device page -->
+            <StackPanel x:Name="PageDevice" Visibility="Visible">
+                <TextBlock Text="Device" FontSize="22" FontWeight="Bold" Margin="0,0,0,18"/>
+                <Border Style="{StaticResource Card}">
+                    <StackPanel>
+                        <TextBlock Text="INFO" Style="{StaticResource SectionTitle}"/>
+                        <TextBlock x:Name="ModelText" Text="Model: -" Margin="0,2"/>
+                        <TextBlock x:Name="BuildDateText" Text="Firmware date: -" Margin="0,2"/>
+                        <TextBlock x:Name="PathText" Text="HID path: -" Margin="0,2" Foreground="{StaticResource TextSecondary}" FontSize="11" TextWrapping="Wrap"/>
+                    </StackPanel>
+                </Border>
+                <Border Style="{StaticResource Card}">
+                    <StackPanel>
+                        <TextBlock Text="ABOUT" Style="{StaticResource SectionTitle}"/>
+                        <TextBlock TextWrapping="Wrap" Foreground="{StaticResource TextSecondary}" FontSize="12">
+                            Independent control software for the AULA WIN60HE / WIN75HE, built from a
+                            reverse-engineered protocol (see re/protocol.md in the project folder).
+                            Some features are still being mapped — the Actuation page shows this
+                            explicitly per key.
+                        </TextBlock>
+                    </StackPanel>
+                </Border>
+            </StackPanel>
+
+            <!-- Lighting page -->
+            <StackPanel x:Name="PageLighting" Visibility="Collapsed">
+                <TextBlock Text="Lighting" FontSize="22" FontWeight="Bold" Margin="0,0,0,18"/>
+
+                <Border Style="{StaticResource Card}">
+                    <StackPanel>
+                        <TextBlock Text="EFFECT" Style="{StaticResource SectionTitle}"/>
+                        <ComboBox x:Name="EffectCombo" SelectionChanged="EffectCombo_Changed" HorizontalAlignment="Left" Width="220"/>
+
+                        <Grid Margin="0,14,0,0">
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="90"/>
+                                <ColumnDefinition Width="*"/>
+                                <ColumnDefinition Width="70"/>
+                            </Grid.ColumnDefinitions>
+                            <TextBlock Grid.Column="0" Text="Speed" VerticalAlignment="Center"/>
+                            <Slider Grid.Column="1" x:Name="SpeedSlider" Margin="10,0" Minimum="0" Maximum="4" Value="4" TickFrequency="1" IsSnapToTickEnabled="True" VerticalAlignment="Center" ValueChanged="SpeedSlider_Changed"/>
+                            <TextBlock Grid.Column="2" x:Name="SpeedValueText" Text="4 / 4" VerticalAlignment="Center" HorizontalAlignment="Right"/>
+                        </Grid>
+
+                        <CheckBox x:Name="RainbowCheck" Content="Rainbow (cycle all colors, ignores the color below)" Margin="0,14,0,0"/>
+                    </StackPanel>
+                </Border>
+
+                <Border Style="{StaticResource Card}">
+                    <StackPanel>
+                        <TextBlock Text="COLOR" Style="{StaticResource SectionTitle}"/>
+
+                        <Grid>
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="90"/>
+                                <ColumnDefinition Width="*"/>
+                                <ColumnDefinition Width="90"/>
+                            </Grid.ColumnDefinitions>
+                            <TextBlock Grid.Column="0" Text="Brightness" VerticalAlignment="Center"/>
+                            <Slider Grid.Column="1" x:Name="BrightnessSlider" Minimum="0" Maximum="4" Value="4" TickFrequency="1" IsSnapToTickEnabled="True" VerticalAlignment="Center" ValueChanged="ColorSlider_Changed"/>
+                            <TextBlock Grid.Column="2" x:Name="BrightnessValueText" Text="4 / 4" VerticalAlignment="Center" HorizontalAlignment="Right"/>
+                        </Grid>
+
+                        <TextBlock Text="Color Picker" Foreground="{StaticResource TextSecondary}" FontSize="11" Margin="0,18,0,6"/>
+                        <Border CornerRadius="8" ClipToBounds="True" HorizontalAlignment="Left"
+                                BorderBrush="{StaticResource BorderSubtle}" BorderThickness="1">
+                            <Canvas x:Name="SatValCanvas" Width="260" Height="150" Cursor="Cross"
+                                    MouseLeftButtonDown="SatValCanvas_MouseDown"
+                                    MouseMove="SatValCanvas_MouseMove"
+                                    MouseLeftButtonUp="SatValCanvas_MouseUp"
+                                    MouseLeave="SatValCanvas_MouseLeave">
+                                <Rectangle x:Name="SatValHueLayer" Width="260" Height="150" Fill="Red"/>
+                                <Rectangle Width="260" Height="150" IsHitTestVisible="False">
+                                    <Rectangle.Fill>
+                                        <LinearGradientBrush StartPoint="0,0" EndPoint="1,0">
+                                            <GradientStop Color="#FFFFFFFF" Offset="0"/>
+                                            <GradientStop Color="#00FFFFFF" Offset="1"/>
+                                        </LinearGradientBrush>
+                                    </Rectangle.Fill>
+                                </Rectangle>
+                                <Rectangle Width="260" Height="150" IsHitTestVisible="False">
+                                    <Rectangle.Fill>
+                                        <LinearGradientBrush StartPoint="0,0" EndPoint="0,1">
+                                            <GradientStop Color="#00000000" Offset="0"/>
+                                            <GradientStop Color="#FF000000" Offset="1"/>
+                                        </LinearGradientBrush>
+                                    </Rectangle.Fill>
+                                </Rectangle>
+                                <Ellipse x:Name="SatValCursor" Width="14" Height="14" Stroke="White" StrokeThickness="2" Fill="Transparent" IsHitTestVisible="False"/>
+                            </Canvas>
+                        </Border>
+
+                        <Border CornerRadius="6" ClipToBounds="True" HorizontalAlignment="Left" Margin="0,10,0,0"
+                                BorderBrush="{StaticResource BorderSubtle}" BorderThickness="1">
+                            <Canvas x:Name="HueCanvas" Width="260" Height="18" Cursor="Hand"
+                                    MouseLeftButtonDown="HueCanvas_MouseDown"
+                                    MouseMove="HueCanvas_MouseMove"
+                                    MouseLeftButtonUp="HueCanvas_MouseUp"
+                                    MouseLeave="HueCanvas_MouseLeave">
+                                <Rectangle Width="260" Height="18">
+                                    <Rectangle.Fill>
+                                        <LinearGradientBrush StartPoint="0,0" EndPoint="1,0">
+                                            <GradientStop Color="#FFFF0000" Offset="0.0"/>
+                                            <GradientStop Color="#FFFFFF00" Offset="0.1667"/>
+                                            <GradientStop Color="#FF00FF00" Offset="0.3333"/>
+                                            <GradientStop Color="#FF00FFFF" Offset="0.5"/>
+                                            <GradientStop Color="#FF0000FF" Offset="0.6667"/>
+                                            <GradientStop Color="#FFFF00FF" Offset="0.8333"/>
+                                            <GradientStop Color="#FFFF0000" Offset="1.0"/>
+                                        </LinearGradientBrush>
+                                    </Rectangle.Fill>
+                                </Rectangle>
+                                <Rectangle x:Name="HueCursor" Width="4" Height="18" Fill="White" Stroke="Black" StrokeThickness="1" IsHitTestVisible="False"/>
+                            </Canvas>
+                        </Border>
+
+                        <Grid Margin="0,16,0,0">
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="24"/>
+                                <ColumnDefinition Width="*"/>
+                                <ColumnDefinition Width="70"/>
+                            </Grid.ColumnDefinitions>
+                            <Grid.RowDefinitions>
+                                <RowDefinition/>
+                                <RowDefinition/>
+                                <RowDefinition/>
+                            </Grid.RowDefinitions>
+
+                            <TextBlock Grid.Row="0" Grid.Column="0" Text="R" VerticalAlignment="Center"/>
+                            <Slider Grid.Row="0" Grid.Column="1" Margin="10,0" x:Name="RSlider" Minimum="0" Maximum="255" Value="255" VerticalAlignment="Center" ValueChanged="ColorSlider_Changed"/>
+                            <TextBox Grid.Row="0" Grid.Column="2" x:Name="RBox" Text="255" Margin="0,3" TextChanged="ColorBox_Changed"/>
+
+                            <TextBlock Grid.Row="1" Grid.Column="0" Text="G" VerticalAlignment="Center"/>
+                            <Slider Grid.Row="1" Grid.Column="1" Margin="10,0" x:Name="GSlider" Minimum="0" Maximum="255" Value="0" VerticalAlignment="Center" ValueChanged="ColorSlider_Changed"/>
+                            <TextBox Grid.Row="1" Grid.Column="2" x:Name="GBox" Text="0" Margin="0,3" TextChanged="ColorBox_Changed"/>
+
+                            <TextBlock Grid.Row="2" Grid.Column="0" Text="B" VerticalAlignment="Center"/>
+                            <Slider Grid.Row="2" Grid.Column="1" Margin="10,0" x:Name="BSlider" Minimum="0" Maximum="255" Value="0" VerticalAlignment="Center" ValueChanged="ColorSlider_Changed"/>
+                            <TextBox Grid.Row="2" Grid.Column="2" x:Name="BBox" Text="0" Margin="0,3" TextChanged="ColorBox_Changed"/>
+                        </Grid>
+
+                        <StackPanel Orientation="Horizontal" Margin="0,14,0,0">
+                            <Border x:Name="ColorPreview" Width="46" Height="46" CornerRadius="8" Background="Red" BorderBrush="{StaticResource BorderSubtle}" BorderThickness="1" Margin="0,0,14,0"/>
+                            <StackPanel VerticalAlignment="Center">
+                                <StackPanel Orientation="Horizontal">
+                                    <TextBlock Text="Hex:" VerticalAlignment="Center" Margin="0,0,6,0"/>
+                                    <TextBox x:Name="HexBox" Width="90" Text="FF0000" TextChanged="HexBox_Changed"/>
+                                </StackPanel>
+                            </StackPanel>
+                        </StackPanel>
+
+                        <WrapPanel Margin="0,14,0,0">
+                            <Button Content="Red" Style="{StaticResource SecondaryButton}" Margin="0,0,8,8" Click="PresetRed_Click"/>
+                            <Button Content="Orange" Style="{StaticResource SecondaryButton}" Margin="0,0,8,8" Click="PresetOrange_Click"/>
+                            <Button Content="Yellow" Style="{StaticResource SecondaryButton}" Margin="0,0,8,8" Click="PresetYellow_Click"/>
+                            <Button Content="Green" Style="{StaticResource SecondaryButton}" Margin="0,0,8,8" Click="PresetGreen_Click"/>
+                            <Button Content="Cyan" Style="{StaticResource SecondaryButton}" Margin="0,0,8,8" Click="PresetCyan_Click"/>
+                            <Button Content="Blue" Style="{StaticResource SecondaryButton}" Margin="0,0,8,8" Click="PresetBlue_Click"/>
+                            <Button Content="Purple" Style="{StaticResource SecondaryButton}" Margin="0,0,8,8" Click="PresetPurple_Click"/>
+                            <Button Content="White" Style="{StaticResource SecondaryButton}" Margin="0,0,8,8" Click="PresetWhite_Click"/>
+                        </WrapPanel>
+
+                        <Button Content="Apply to Keyboard" Click="ApplyLighting_Click" Width="180" HorizontalAlignment="Left" Margin="0,16,0,0"/>
+                    </StackPanel>
+                </Border>
+
+                <Border Style="{StaticResource Card}">
+                    <StackPanel>
+                        <TextBlock Text="INDIVIDUAL KEY COLORS" Style="{StaticResource SectionTitle}"/>
+                        <TextBlock TextWrapping="Wrap" Foreground="{StaticResource TextSecondary}" FontSize="12" Margin="0,0,0,12">
+                            Click a key to select it — drag across keys or hold Ctrl and click to select
+                            several at once — then click Paint Selected to assign the color above to all
+                            of them. This switches the keyboard to Custom lighting mode. Every unpainted
+                            key goes dark when you Apply — paint everything you want lit first.
+                        </TextBlock>
+
+                        <Viewbox Stretch="Uniform" StretchDirection="DownOnly" HorizontalAlignment="Left">
+                            <StackPanel x:Name="LightingKeyboardVisual"/>
+                        </Viewbox>
+
+                        <StackPanel Orientation="Horizontal" Margin="0,16,0,0">
+                            <Button Content="Paint Selected" Click="PaintSelectedKeys_Click" Width="140" Margin="0,0,10,0"/>
+                            <Button Content="Apply Key Colors" Click="ApplyKeyColors_Click" Width="160" Margin="0,0,10,0"/>
+                            <Button Content="Clear All" Style="{StaticResource SecondaryButton}" Click="ClearKeyColors_Click" Width="120"/>
+                        </StackPanel>
+                    </StackPanel>
+                </Border>
+            </StackPanel>
+
+            <!-- Actuation page -->
+            <StackPanel x:Name="PageActuation" Visibility="Collapsed">
+                <Grid Margin="0,0,0,6">
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="*"/>
+                        <ColumnDefinition Width="Auto"/>
+                    </Grid.ColumnDefinitions>
+                    <TextBlock Grid.Column="0" Text="Actuation" FontSize="22" FontWeight="Bold" VerticalAlignment="Center"/>
+                    <Button Grid.Column="1" Content="Refresh from Keyboard" Click="RefreshTravels_Click" Style="{StaticResource SecondaryButton}"/>
+                </Grid>
+                <TextBlock TextWrapping="Wrap" Foreground="{StaticResource TextSecondary}" FontSize="12" Margin="0,0,0,16">
+                    Click a key below to select it — drag across keys or hold Ctrl and click to select
+                    several at once. The small number under each key is its live actuation travel, read
+                    from the keyboard on connect (and via Refresh).
+                </TextBlock>
+
+                <Border Style="{StaticResource Card}">
+                    <Viewbox Stretch="Uniform" StretchDirection="DownOnly" HorizontalAlignment="Left">
+                        <StackPanel x:Name="KeyboardVisual"/>
+                    </Viewbox>
+                </Border>
+
+                <Border Style="{StaticResource Card}">
+                    <StackPanel>
+                        <TextBlock x:Name="SelectedKeyText" Text="No key selected" Style="{StaticResource SectionTitle}"/>
+
+                        <Grid>
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="110"/>
+                                <ColumnDefinition Width="*"/>
+                                <ColumnDefinition Width="70"/>
+                            </Grid.ColumnDefinitions>
+                            <TextBlock Grid.Column="0" Text="Trigger travel" VerticalAlignment="Center"/>
+                            <Slider Grid.Column="1" x:Name="TriggerSlider" Minimum="0.1" Maximum="4.0" Value="0.25" TickFrequency="0.01" VerticalAlignment="Center" ValueChanged="ActuationSlider_Changed"/>
+                            <TextBlock Grid.Column="2" x:Name="TriggerValueText" Text="0.25mm" VerticalAlignment="Center" HorizontalAlignment="Right"/>
+                        </Grid>
+                        <Grid Margin="0,10,0,0">
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="110"/>
+                                <ColumnDefinition Width="*"/>
+                                <ColumnDefinition Width="70"/>
+                            </Grid.ColumnDefinitions>
+                            <TextBlock Grid.Column="0" Text="Release travel" VerticalAlignment="Center"/>
+                            <Slider Grid.Column="1" x:Name="ReleaseSlider" Minimum="0.1" Maximum="4.0" Value="0.24" TickFrequency="0.01" VerticalAlignment="Center" ValueChanged="ActuationSlider_Changed"/>
+                            <TextBlock Grid.Column="2" x:Name="ReleaseValueText" Text="0.24mm" VerticalAlignment="Center" HorizontalAlignment="Right"/>
+                        </Grid>
+
+                        <StackPanel Orientation="Horizontal" Margin="0,16,0,0">
+                            <Button x:Name="ApplyActuationButton" Content="Apply to Selected" Click="ApplyActuation_Click" Width="160" IsEnabled="False" Margin="0,0,10,0"/>
+                            <Button x:Name="ApplyAllButton" Content="Apply to All Mapped Keys" Style="{StaticResource SecondaryButton}" Click="ApplyActuationAll_Click" Width="180"/>
+                        </StackPanel>
+                    </StackPanel>
+                </Border>
+            </StackPanel>
+
+            <!-- SOCD page -->
+            <StackPanel x:Name="PageSocd" Visibility="Collapsed">
+                <Grid Margin="0,0,0,6">
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="*"/>
+                        <ColumnDefinition Width="Auto"/>
+                    </Grid.ColumnDefinitions>
+                    <TextBlock Grid.Column="0" Text="SOCD" FontSize="22" FontWeight="Bold" VerticalAlignment="Center"/>
+                    <Button Grid.Column="1" Content="Refresh from Keyboard" Click="RefreshSocd_Click" Style="{StaticResource SecondaryButton}"/>
+                </Grid>
+                <TextBlock TextWrapping="Wrap" Foreground="{StaticResource TextSecondary}" FontSize="12" Margin="0,0,0,16">
+                    Set two keys as mutually exclusive (e.g. A/D or Left/Right). Writing pairs
+                    replaces the entire list on the keyboard — add everything you want before
+                    clicking Apply. Max 20 pairs.
+                </TextBlock>
+
+                <Border Style="{StaticResource Card}">
+                    <StackPanel>
+                        <TextBlock Text="GLOBAL SWITCH" Style="{StaticResource SectionTitle}"/>
+                        <StackPanel Orientation="Horizontal">
+                            <CheckBox x:Name="SocdEnabledCheck" Content="SOCD enabled" IsChecked="True"/>
+                            <Button Content="Apply Switch" Style="{StaticResource SecondaryButton}" Click="ApplySocdSwitch_Click" Margin="16,0,0,0"/>
+                        </StackPanel>
+                    </StackPanel>
+                </Border>
+
+                <Border Style="{StaticResource Card}">
+                    <StackPanel>
+                        <TextBlock Text="ADD PAIR" Style="{StaticResource SectionTitle}"/>
+                        <Grid>
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="*"/>
+                                <ColumnDefinition Width="*"/>
+                                <ColumnDefinition Width="*"/>
+                            </Grid.ColumnDefinitions>
+                            <StackPanel Grid.Column="0" Margin="0,0,8,0">
+                                <TextBlock Text="Key 1" Foreground="{StaticResource TextSecondary}" FontSize="11" Margin="0,0,0,4"/>
+                                <ComboBox x:Name="SocdKey1Combo">
+                                    <ComboBox.ItemTemplate>
+                                        <DataTemplate>
+                                            <TextBlock Text="{Binding Label}" Foreground="{StaticResource TextPrimary}"/>
+                                        </DataTemplate>
+                                    </ComboBox.ItemTemplate>
+                                </ComboBox>
+                            </StackPanel>
+                            <StackPanel Grid.Column="1" Margin="8,0">
+                                <TextBlock Text="Key 2" Foreground="{StaticResource TextSecondary}" FontSize="11" Margin="0,0,0,4"/>
+                                <ComboBox x:Name="SocdKey2Combo">
+                                    <ComboBox.ItemTemplate>
+                                        <DataTemplate>
+                                            <TextBlock Text="{Binding Label}" Foreground="{StaticResource TextPrimary}"/>
+                                        </DataTemplate>
+                                    </ComboBox.ItemTemplate>
+                                </ComboBox>
+                            </StackPanel>
+                            <StackPanel Grid.Column="2" Margin="8,0,0,0">
+                                <TextBlock Text="Model" Foreground="{StaticResource TextSecondary}" FontSize="11" Margin="0,0,0,4"/>
+                                <ComboBox x:Name="SocdModelCombo"/>
+                            </StackPanel>
+                        </Grid>
+                        <TextBlock x:Name="SocdModelDescText" Foreground="{StaticResource TextSecondary}" FontSize="11" Margin="0,8,0,0" TextWrapping="Wrap"/>
+                        <Button Content="Add Pair" Click="AddSocdPair_Click" Width="120" HorizontalAlignment="Left" Margin="0,14,0,0"/>
+                    </StackPanel>
+                </Border>
+
+                <Border Style="{StaticResource Card}">
+                    <StackPanel>
+                        <TextBlock Text="PAIRS" Style="{StaticResource SectionTitle}"/>
+                        <ListBox x:Name="SocdPairsList" Background="{StaticResource BgCardAlt}" BorderBrush="{StaticResource BorderSubtle}"
+                                 Foreground="{StaticResource TextPrimary}" Height="140"/>
+                        <StackPanel Orientation="Horizontal" Margin="0,14,0,0">
+                            <Button Content="Remove Selected" Style="{StaticResource SecondaryButton}" Click="RemoveSocdPair_Click" Margin="0,0,10,0"/>
+                            <Button Content="Apply Pairs" Click="ApplySocdPairs_Click"/>
+                        </StackPanel>
+                    </StackPanel>
+                </Border>
+            </StackPanel>
+
+            <!-- Raw console page -->
+            <StackPanel x:Name="PageConsole" Visibility="Collapsed">
+                <TextBlock Text="Raw Console" FontSize="22" FontWeight="Bold" Margin="0,0,0,6"/>
+                <TextBlock TextWrapping="Wrap" Foreground="{StaticResource TextSecondary}" FontSize="12" Margin="0,0,0,16">
+                    Sends a raw hex payload as report 1 and shows the device's response. For protocol
+                    exploration — see re/protocol.md for known command byte layouts.
+                </TextBlock>
+                <Border Style="{StaticResource Card}">
+                    <StackPanel>
+                        <TextBlock Text="PAYLOAD (hex bytes, space-separated)" Style="{StaticResource SectionTitle}"/>
+                        <TextBox x:Name="RawInputBox" Text="0d 00 00 00" FontFamily="Consolas"/>
+                        <Button Content="Send" Click="SendRaw_Click" Width="100" HorizontalAlignment="Left" Margin="0,12,0,0"/>
+
+                        <TextBlock Text="RESPONSE" Style="{StaticResource SectionTitle}" Margin="0,18,0,10"/>
+                        <TextBox x:Name="RawOutputBox" FontFamily="Consolas" IsReadOnly="True" TextWrapping="Wrap" Height="90" AcceptsReturn="True" VerticalScrollBarVisibility="Auto"/>
+                    </StackPanel>
+                </Border>
+            </StackPanel>
+        </Grid>
+        </ScrollViewer>
+        </Grid>
+    </Grid>
+</Window>

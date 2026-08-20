@@ -1,0 +1,22 @@
+## .NET build output
+bin/
+obj/
+
+## IDE / editor
+.vs/
+.vscode/
+*.user
+*.suo
+
+## OS junk
+Thumbs.db
+.DS_Store
+
+## Reverse-engineering scratch space: local mirror of AULA's proprietary web
+## driver + third-party GitHub repos cloned for research (see re/protocol.md
+## for what was learned from them). Not ours to redistribute/relicense, and
+## it's ~95MB of other people's code — kept out of the public repo.
+re/external/
+
+## Scratch capture dumps from debugging sessions (cli/before.txt, cli/after.txt)
+cli/*.txt
