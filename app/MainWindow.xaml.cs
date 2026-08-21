@@ -39,6 +39,8 @@ public partial class MainWindow : Window
         InitSocdUi();
         SyncColorUi();
         _loaded = true;
+
+        Loaded += async (_, _) => await ConnectAsync();
     }
 
     // ---- Navigation --------------------------------------------------------
@@ -69,6 +71,20 @@ public partial class MainWindow : Window
             PathText.Text = "HID path: -";
             return;
         }
+
+        await ConnectAsync();
+    }
+
+    /// <summary>
+    /// Shared by the Connect button and the automatic connect attempt on
+    /// startup (see the Loaded handler in the constructor). Failing quietly
+    /// on startup would hide a real problem, so this shows the same toast
+    /// either way — if no keyboard is plugged in yet, the message just tells
+    /// the user that, which is expected the first time the app opens.
+    /// </summary>
+    private async Task ConnectAsync()
+    {
+        if (_device.IsConnected) return;
 
         SetConnectionState(connected: false, "Connecting...");
         var result = _device.TryConnect();
